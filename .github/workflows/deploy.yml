@@ -1,0 +1,42 @@
+name: Deploy to EC2 with Docker Compose
+
+on:
+  push:
+    branches:
+      - main  # Change if using a different branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Log in to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build and Push Docker Image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest .
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest
+
+      - name: Set up SSH Key
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > key.pem
+          chmod 600 key.pem
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
+            cd /home/ubuntu/flask-task-manager  # Change to your project directory
+
+            # Pull the latest image
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest
+
+            # Stop and remove old containers
+            docker-compose down
+
+            # Start the application with updated image
+            docker-compose up -d --remove-orphans
+          EOF
