@@ -16,6 +16,10 @@ jobs:
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
+      - name: Pull the latest code from GitHub
+        run: |
+          git pull origin main
+
       - name: Build and Push Docker Image
         run: |
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest .
@@ -34,14 +38,6 @@ jobs:
             # Ensure directory exists
             mkdir -p /home/ubuntu/flask-task-manager
             cd /home/ubuntu/flask-task-manager
-
-            # Pull the latest code from GitHub
-            if [ ! -d .git ]; then
-              git clone https://github.com/mamunurrashid1010/flask-task-manager.git .
-            else
-              git reset --hard  
-              git pull origin main  
-            fi
 
             # Pull the latest image from Docker Hub
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest
