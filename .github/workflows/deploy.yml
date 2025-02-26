@@ -45,9 +45,9 @@ jobs:
             # Stop and remove old containers (if running)
             sudo docker-compose down || true
 
-            # Start new containers with the latest image & code
-            sudo docker-compose up -d --remove-orphans
-
             # Remove unused images to save space
             sudo docker system prune -af
+          
+            # Start new containers with the latest image & code
+            sudo docker-compose up -d --remove-orphans
           EOF
