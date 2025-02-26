@@ -3,7 +3,7 @@ name: Deploy to EC2 with Docker Compose
 on:
   push:
     branches:
-      - main  # Change if using a different branch
+      - main  # Change to your deployment branch if needed
 
 jobs:
   deploy:
@@ -29,14 +29,27 @@ jobs:
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no -i key.pem ubuntu@${{ secrets.EC2_HOST }} << 'EOF'
-            cd /home/ubuntu/flask-task-manager  # Change to your project directory
+            set -e  # Exit script if any command fails
 
-            # Pull the latest image
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest
+            # Ensure directory exists
+            mkdir -p /home/ubuntu/flask-task-manager
+            cd /home/ubuntu/flask-task-manager
 
-            # Stop and remove old containers
-            docker-compose down
+            # Pull the latest image from Docker Hub
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest
 
-            # Start the application with updated image
-            docker-compose up -d --remove-orphans
+            # Stop and remove old containers (if running)
+            sudo docker-compose down || true
+
+            # Ensure docker-compose.yml is present
+            if [ ! -f docker-compose.yml ]; then
+                echo "Error: docker-compose.yml not found!"
+                exit 1
+            fi
+
+            # Start new containers
+            sudo docker-compose up -d --remove-orphans
+
+            # Remove unused images to save space
+            sudo docker system prune -af
           EOF
