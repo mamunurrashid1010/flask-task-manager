@@ -16,12 +16,9 @@ jobs:
       - name: Log in to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Pull the latest code from GitHub
-        run: |
-          git pull origin main
-
       - name: Build and Push Docker Image
         run: |
+          # Build the image using the latest code pulled during the checkout step
           docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest .
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest
 
@@ -38,7 +35,7 @@ jobs:
             # Ensure directory exists
             mkdir -p /home/ubuntu/flask-task-manager
             cd /home/ubuntu/flask-task-manager
-          
+
             # Remove unused images to save space
             sudo docker system prune -af
 
@@ -47,7 +44,7 @@ jobs:
 
             # Stop and remove old containers (if running)
             sudo docker-compose down || true
-          
+
             # Start new containers with the latest image & code
             sudo docker-compose up -d --remove-orphans
           EOF
