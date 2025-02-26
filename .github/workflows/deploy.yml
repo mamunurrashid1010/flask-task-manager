@@ -38,15 +38,15 @@ jobs:
             # Ensure directory exists
             mkdir -p /home/ubuntu/flask-task-manager
             cd /home/ubuntu/flask-task-manager
+          
+            # Remove unused images to save space
+            sudo docker system prune -af
 
             # Pull the latest image from Docker Hub
             sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/flask-task-manager:latest
 
             # Stop and remove old containers (if running)
             sudo docker-compose down || true
-
-            # Remove unused images to save space
-            sudo docker system prune -af
           
             # Start new containers with the latest image & code
             sudo docker-compose up -d --remove-orphans
